@@ -5,6 +5,7 @@ import os
 import time
 global health_icon
 global bandit_icon
+global fight_timer
 
 
 if platform == "linux" or platform == "linux2":
@@ -17,10 +18,35 @@ elif platform == "win32":
 #------------------------------------------------------------------------------------------------------- Classes
 class Player(object):
     def __init__(self, name, health, attack, weapon, life):
+        self.level = 1
         self.name = name
-        self.health = health
-        self.attack = attack
-        self.weapon = weapon
+        self.health = 100
+        self.attack = 100
+        self.weapon = 0
+        self.life = True
+    def health_check(self):
+        if self.health > self.level * 10:
+            return False
+        else:
+            return True
+
+    def level_check(self):
+        if self.attack % ((self.level + 1) * 100) <= 0:
+            self.level = int(attack * .1) 
+
+    def stat_check(self):
+        self.level_check()
+        self.health_check()
+
+
+
+
+
+class Enemy(object):
+    def __init__(self):
+        self.name = "Scary fucking monster"
+        self.health = randint(int(player.health * 0.5), int(player.health * 1.2))
+        self.attack = randint(int(player.attack * 0.5), int(player.attack * 1.2))
         self.life = True
 #------------------------------------------------------------------------------------------------------- Varibles
 player = Player(raw_input("Name?"), 1000, 1000, 0, True)
@@ -33,8 +59,8 @@ won = False
 
 #other varibles
 win = 300
-gold_count = 10
-enemy_count = 5
+gold_count = 3
+enemy_count = 60
 Map_Size_X_Y = 8
 
 
@@ -46,7 +72,6 @@ max_step = 2
 
 #Icons
 land_icon = ' '
-used_land_icon = ' '
 bandit_icon = 'X'
 health_icon = '+'
 player_icon = "##"
@@ -56,18 +81,26 @@ body_icon = "*"
 icon_length = len(player_icon)
 bandit_icon = bandit_icon*icon_length
 health_icon = health_icon*icon_length
+land_icon = land_icon*icon_length
 wall_icon = wall_icon*icon_length
 body_icon = body_icon*icon_length
+
+
+
 object_board = []
 memory_board = []
 playerboard = []
+
 for click in range(Map_Size_X_Y):
-    object_board.append([used_land_icon*icon_length] * Map_Size_X_Y)
-    playerboard.append([land_icon*icon_length] * Map_Size_X_Y)
-    memory_board.append([0*icon_length] * Map_Size_X_Y)
+    object_board.append([land_icon] * Map_Size_X_Y)
+    playerboard.append([land_icon] * Map_Size_X_Y)
+    memory_board.append([0] * Map_Size_X_Y)
+
+
 Used_coordinates = []
 player_xy = [(len(object_board)-2), 0, 0]
 Used_coordinates.append(str(player_xy[0]) + str(player_xy[1]))
+
 def Object_Placement(object_count, object_to_be_placed):
     spot = []
     for x in range(object_count): # How many random numbers?
@@ -118,7 +151,7 @@ def board_transport(move_choice, em, who):
 
 
     if move_choice == "d3bug":
-        player_score = 15766
+        player.level, player.attack, player.health = 15766, 15766, 15766
     em = move_choice
     if move_choice == "RESET":
         who[0] = 0
@@ -126,7 +159,7 @@ def board_transport(move_choice, em, who):
 
     if len(move_choice) == 2 and move_choice[0] in ('u', 'd', 'l', 'r') and move_choice[1] in str(range(0, len(object_board))): 
         if move_choice[0] == "u":
-            if who[0] - int(move_choice[1]) > 0: #UP
+            if who[0] - int(move_choice[1]) >= 0: #UP
                 if playerboard[(who[0] - int(move_choice[1]))][who[1]] not in (wall_icon):
                     who[0] -= int(move_choice[1]) 
                 else:
@@ -135,7 +168,7 @@ def board_transport(move_choice, em, who):
                 em = "You can't move there!"
 
         elif move_choice[0] == "d":
-            if (who[0] + int(move_choice[1])) < (len(object_board)-1): #DOWN
+            if (who[0] + int(move_choice[1])) <= (len(object_board)-1): #DOWN
                 if playerboard[(who[0] + int(move_choice[1]))][who[1]] not in (wall_icon):
                     who[0] += int(move_choice[1])
                 else:
@@ -144,7 +177,7 @@ def board_transport(move_choice, em, who):
                 em = "You can't move there!"
 
         elif move_choice[0] == "r":
-            if who[1] + int(move_choice[1]) < (len(object_board)-1): #RIGHT
+            if who[1] + int(move_choice[1]) <= (len(object_board)-1): #RIGHT
                 if playerboard[who[0]][(who[1] + int(move_choice[1]))] not in (wall_icon):
                     who[1] += int(move_choice[1])
                 else:
@@ -153,7 +186,7 @@ def board_transport(move_choice, em, who):
                 em = "You can't move there!"
 
         elif move_choice[0] == "l":
-            if who[1] - int(move_choice[1]) > 0: #LEFT
+            if who[1] - int(move_choice[1]) >= 0: #LEFT
                 if playerboard[who[0]][(who[1] - int(move_choice[1]))] not in (wall_icon):
                     who[1] -= int(move_choice[1])
                 else:
@@ -168,10 +201,10 @@ def board_transport(move_choice, em, who):
     return who
 
 #------------------------------------------------------------------------------------------------------- Battle loop
-def fight():
+def fight(enemy):
+    global fight_timer
     time.sleep(1)
     clear()
-    enemy = Player("Scary fucking monster", randint(50, 130), randint(50, 130), 0, True)
     print "A", enemy.name ,"appears!"
     time.sleep(1)
     if enemy.health > player.health:
@@ -179,25 +212,14 @@ def fight():
     else:
         print "You should be able to kill him!"
     time.sleep(1)
-    battle = True
+    fight_timer = True
 
-    while battle == True:
-        if player.health <= 0:
-            clear()
-            print "You Are Dead"
-            player.life = False
-            battle = False
-        elif enemy.health <= 0: 
-            clear()
-            print "You killed the enemy!"
-            enemy.life = False
-            battle = False
-
-        def playerattack():
-
+    while fight_timer:
+        def battle(fighter, opponent):
+            global fight_timer
             def hit(attack, enattack):
-                chance = attack - enattack + 5 * ran(1, (player.attack / 2)) # all the comments are written in enemy attack.
-                enchance = attack - enattack + 4 * ran(1, (enemy.attack / 2))
+                chance = attack - enattack + 5 * ran(1, (int(fighter.attack)) / 2) # all the comments are written in opponent attack.
+                enchance = attack - enattack + 4 * ran(1, (int(opponent.attack)) / 2)
                 if chance > enchance:
                     return True
                 else:
@@ -207,72 +229,44 @@ def fight():
                 damage = attack / ran(1, 10)
                 return damage
 
-            if player.health > 0 and enemy.health > 0:
-                clear()
-                print "You throw a punch!" #add more items!!!!
-                time.sleep(1)
-                if hit(player.attack, enemy.attack):
-                    hit = attack(player.attack)
-                    enemy.health -= hit
-                    if enemy.health <= 0:
-                        enemy.health = 0
+
+            clear()
+            print fighter.name, "throws a punch!" #add more items!!!!
+            time.sleep(2)
+            if hit(fighter.attack, opponent.attack):
+                hit = attack(fighter.attack)
+                opponent.health -= hit
+                if opponent.health <= 0:
+                    opponent.health = 0
                         
-
-                    print "you hit the enemy with " + str(hit) + " points of damage!  -" + str(enemy.health) + " HP Remaining"
-                    time.sleep(1)
-                else:
-
-                    print "You missed!"
-                    time.sleep(1)
-            else:
-                battle = False
-                return battle
-
-
-        def enemyattack():
-
-            if enemy.health > 0 and player.health > 0:
-
-                def hit(attack, enattack): # decides if current fighter will hit depending on compared attack levels.
-                    chance = attack - enattack + 5 * ran(1, (enemy.attack / 2))
-                    enchance = attack - enattack + 4 * ran(1, (player.attack / 2))
-                    if chance > enchance:
-                        return True
-                    else:
-                        return False
-
-                def attack(attack): # decides attack damage
-                    damage = attack / ran(1, 10)
-                    return damage
-
                 clear()
-                print "The enemy lunges at you!!" #add attack methods!!!
+                print fighter.name, "hit", opponent.name
                 time.sleep(1)
-                if hit(enemy.attack, player.attack):# If player 'hit':
-                    hit = attack(enemy.attack) # Decide attack damage
-                    player.health -= hit
-                    if player.health <= 0: # If player health is negative, health = 0 (No more -### health after large attacks)
-                        player.health = 0
-                    
-
-                    print "The enemy hit you with " + str(hit) + " points of damage!  -" + str(player.health) + " #HP Remaining"
-                    time.sleep(1)
-                else:
-
-                    print "They missed!"
-                    time.sleep(1)
-                
+                clear()
+                print opponent.name, "Takes",  str(hit), "Damage!"
+                time.sleep(1)
+                clear()
+                print opponent.name, "has", str(opponent.health) + " HP Remaining"
+                time.sleep(1)
             else:
-                battle = False
-                return battle
-
+                clear()
+                print fighter.name, "missed!"
+                time.sleep(1)
+            if opponent.health <= 0:
+                opponent.life = False
+                print opponent.name, "is dead!"
+                fight_timer = False
+                
+                
 
         who = ran(1, 2)# 50/50 turn chance despite attack level.
-        #print str(who) + " = Decider" #debugger
         if who == 1:
-            playerattack()
+            battle(player, enemy)
         else:
-            enemyattack()
+            battle(enemy, player)
+        print fight_timer
+        time.sleep(1)
+
 
 #------------------------------------------------------------------------------------------------------- game loop
 while player.life == True:
@@ -302,8 +296,10 @@ while player.life == True:
 
 
         if object_board[oldposision[0]][oldposision[1]] == bandit_icon:
-            fight()
+            enemy = Enemy()
+            fight(enemy)
             if player.life == True:
+                player.attack += int(enemy.attack*.2)
                 playerboard[oldposision[0]][oldposision[1]], object_board[oldposision[0]][oldposision[1]] = body_icon, body_icon
                 clear()
                 won = True
@@ -311,22 +307,26 @@ while player.life == True:
                 break
 
         if object_board[oldposision[0]][oldposision[1]] == health_icon:
+            if player.health_check():
+                if memory_board[oldposision[0]][oldposision[1]] <= 3:
+                    player.health += player.level *.25
+            else:
+                memory_board[oldposision[0]][oldposision[1]] -= 1
             if memory_board[oldposision[0]][oldposision[1]] == 3:
-                player.health += 10
                 playerboard[oldposision[0]][oldposision[1]], object_board[oldposision[0]][oldposision[1]] = land_icon, land_icon # Make chest_icon into bandit_icon
 
-            else:
-                player.health += 10
             
 
 
 
-        print "You have", player.health, "HP"
+        print "HP:", player.health
+        print "Level: ", player.level
+        print "Xp: ", player.attack
 
 
 
 
-
+        player.stat_check()
         print ""
         if won != True:
             W = raw_input("Where to move?")
