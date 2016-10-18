@@ -19,21 +19,43 @@ elif platform == "win32":
 class Player(object):
     def __init__(self, name, health, attack, weapon, life):
         self.level = 1
+        self.xp = 0
         self.name = name
         self.health = 100
+        self.max_health = 100
         self.attack = 100
+        self.defence = 100
         self.weapon = 0
         self.life = True
     def health_check(self):
-        if self.health > self.level * 10:
+        if self.health >= self.max_health:
+            self.health = self.max_health
             return False
         else:
             return True
 
     def level_check(self):
-        if self.attack % ((self.level + 1) * 100) <= 0:
-            self.level = int(attack * .1) 
-
+        if self.xp >= self.level*100:
+            self.level += 1
+            clear()
+            print "Level up!"
+            time.sleep(1)
+            print "What would you like to add 50 skill points too?"
+            print "1. Attack", "    ", "Attack lv currently: ", self.attack
+            print "2. Defence", "    ", "Defence lv currently: ", self.defence
+            print "3. Health", "    ", "Max Health currently: ", self.max_health
+            skill = ""
+            while skill not in ("1", "2", "3"):
+                skill = raw_input("enter: 1/2/3  -")
+                if skill == "1":
+                    self.attack += 50
+                elif skill == "2":
+                    self.defence += 50
+                elif skill == "3":
+                    self.max_health += 50
+                else:
+                    print "Please re-enter  -"
+            self.health = self.max_health
     def stat_check(self):
         self.level_check()
         self.health_check()
@@ -45,22 +67,23 @@ class Player(object):
 class Enemy(object):
     def __init__(self):
         self.name = "Scary fucking monster"
-        self.health = randint(int(player.health * 0.5), int(player.health * 1.2))
-        self.attack = randint(int(player.attack * 0.5), int(player.attack * 1.2))
+        self.health = randint(int(player.health * 0.9), int(player.health * 1.1))
+        self.attack = randint(int(player.attack * 0.9), int(player.attack * 1.1))
+        self.defence = randint(int(player.defence * 0.9), int(player.defence * 1.1))
         self.life = True
 #------------------------------------------------------------------------------------------------------- Varibles
-player = Player(raw_input("Name?"), 1000, 1000, 0, True)
+player = Player(raw_input("Name?"), 100, 100, 0, True)
 
 #boring varibles
 player_score = 0
 error_message = ""
 ran = randint 
-won = False
+Still_alive = True
 
 #other varibles
 win = 300
-gold_count = 3
-enemy_count = 60
+gold_count = 5
+enemy_count = 10
 Map_Size_X_Y = 8
 
 
@@ -153,6 +176,8 @@ def board_transport(move_choice, em, who):
     if move_choice == "d3bug":
         player.level, player.attack, player.health = 15766, 15766, 15766
     em = move_choice
+    if move_choice == "XP!":
+        player.xp += 10
     if move_choice == "RESET":
         who[0] = 0
         who[1] = 0
@@ -207,64 +232,136 @@ def fight(enemy):
     clear()
     print "A", enemy.name ,"appears!"
     time.sleep(1)
-    if enemy.health > player.health:
+    if (enemy.health + enemy.attack + enemy.defence) > (player.health + player.attack + player.defence):
         print "He looks Tough!"
     else:
-        print "You should be able to kill him!"
+        print "He looks weak"
     time.sleep(1)
     fight_timer = True
 
     while fight_timer:
-        def battle(fighter, opponent):
-            global fight_timer
-            def hit(attack, enattack):
-                chance = attack - enattack + 5 * ran(1, (int(fighter.attack)) / 2) # all the comments are written in opponent attack.
-                enchance = attack - enattack + 4 * ran(1, (int(opponent.attack)) / 2)
-                if chance > enchance:
-                    return True
+        class attack_style(object):
+            def __init__(self, ch_attack_style):
+                self.ch_attack_style = ch_attack_style
+                if self.ch_attack_style == "o":
+                    self.style = "Throws a punch!"
+                    self.defence = 1
+                    self.attack = 1.5
+                    self.speed = 1
+                elif self.ch_attack_style == "d":
+                    self.style = "Block!"
+                    self.defence = 3
+                    self.attack = 1
+                    self.speed = 0
+                elif self.ch_attack_style == "p":
+                    self.style = "Throws a power punch!"
+                    self.defence = 0.5
+                    self.attack = 3
+                    self.speed = 2
+                elif self.ch_attack_style == "r":
+                    self.style = "Retreats!"
+                    self.defence = 0.5
+                    self.attack = 0.5
+                    self.speed = 1
                 else:
-                    return False
+                    self.style = "panic!"
+                    self.defence = 0.5
+                    self.attack = 0.5
+                    self.speed = 0
+        class temp_stats(object):
+            def __init__(self, who, who_move):
+                self.style = who_move.style
+                self.attack = who.attack * (who_move.attack)
+                self.defence = who.defence * (who_move.defence)
 
-            def attack(attack):
-                damage = attack / ran(1, 10)
+
+        def battle(fighter, opponent, fighter_stat, opponent_stat):
+
+            global fight_timer
+
+            def attack(attack, defence):
+                damage = int(attack / ran(2, int(defence*0.1)))
+                if damage < (defence*0.1):
+                    damage = 0
+
                 return damage
 
-
-            clear()
-            print fighter.name, "throws a punch!" #add more items!!!!
+            
             time.sleep(2)
-            if hit(fighter.attack, opponent.attack):
-                hit = attack(fighter.attack)
+            hit = attack(fighter_stat.attack, (opponent_stat.defence))
+            if hit > 0:
                 opponent.health -= hit
+                print ""
+                print fighter.name, "hit", opponent.name
+                time.sleep(2)
+                print ""
+                print opponent.name, "Takes",  str(hit), "Damage!"
+                time.sleep(2)
+                print ""
                 if opponent.health <= 0:
                     opponent.health = 0
-                        
-                clear()
-                print fighter.name, "hit", opponent.name
-                time.sleep(1)
-                clear()
-                print opponent.name, "Takes",  str(hit), "Damage!"
-                time.sleep(1)
-                clear()
                 print opponent.name, "has", str(opponent.health) + " HP Remaining"
-                time.sleep(1)
+                time.sleep(2)
             else:
-                clear()
-                print fighter.name, "missed!"
-                time.sleep(1)
+                print ""
+                print opponent.name, "Blocked", fighter.name
+                time.sleep(2)
             if opponent.health <= 0:
+                opponent.health = 0
                 opponent.life = False
+                print ""
                 print opponent.name, "is dead!"
                 fight_timer = False
-                
-                
 
-        who = ran(1, 2)# 50/50 turn chance despite attack level.
-        if who == 1:
-            battle(player, enemy)
+
+        player_move = attack_style(raw_input("Enter attack o/d/p/r"))
+        enemy_rand = randint(0, 2)
+        if enemy_rand == 0:
+            enemy_move = attack_style("o")
+        elif enemy_rand == 1:
+            enemy_move = attack_style("d")
         else:
-            battle(enemy, player)
-        print fight_timer
+            enemy_move = attack_style("p")
+
+        temp_player = temp_stats(player, player_move)
+        temp_enemy = temp_stats(enemy, enemy_move)
+
+        def who(enemy_move, player_move):
+            player_speed = player.attack * player_move.speed
+            enemy_speed = enemy.attack * enemy_move.speed
+            if player_move.style == "Block!":
+                player_speed = 0
+            if player_move.style == "Retreats!" :
+                player_speed = 0
+                return "run"
+            elif player_speed > enemy_speed:
+                return 1
+            elif player_speed < enemy_speed:
+                return 0
+            else:
+                return randint(0,1)
+
+        clear()
+        print player.name, "prepares to", player_move.style
+        time.sleep(2)
+        print ""
+        print enemy.name, "prepares to", enemy_move.style
+        time.sleep(2)
+
+        Who = who(enemy_move, player_move)
+        if Who == 1:
+            battle(player, enemy, temp_player, temp_enemy)
+            if fight_timer:
+                battle(enemy, player, temp_enemy, temp_player)
+        elif Who == 0:
+            battle(enemy, player, temp_enemy, temp_player)
+            if fight_timer:
+                battle(player, enemy, temp_player, temp_enemy)
+        elif Who == "run":
+            battle(enemy, player, temp_enemy, temp_player)
+            fight_timer = False
+            return(0)
+
         time.sleep(1)
 
 
@@ -297,13 +394,17 @@ while player.life == True:
 
         if object_board[oldposision[0]][oldposision[1]] == bandit_icon:
             enemy = Enemy()
-            fight(enemy)
-            if player.life == True:
-                player.attack += int(enemy.attack*.2)
+            GAME = fight(enemy)
+            if player.life == True and GAME != 0:
+                player.xp += int((enemy.attack+enemy.defence)*.2)
                 playerboard[oldposision[0]][oldposision[1]], object_board[oldposision[0]][oldposision[1]] = body_icon, body_icon
                 clear()
-                won = True
+                print_board(playerboard)
+                Still_alive = True
+            elif GAME == 0:
+                Still_alive = True
             else:
+                Still_alive = False
                 break
 
         if object_board[oldposision[0]][oldposision[1]] == health_icon:
@@ -321,18 +422,18 @@ while player.life == True:
 
         print "HP:", player.health
         print "Level: ", player.level
-        print "Xp: ", player.attack
+        print "Xp: ", player.xp
 
 
 
 
         player.stat_check()
         print ""
-        if won != True:
+        if Still_alive == True:
             W = raw_input("Where to move?")
         else:
-            W = "u0"
-            won = False
+            Still_alive = False
+            break
 
         '''else:
             W = d3bug_bot(bot_speed)'''
