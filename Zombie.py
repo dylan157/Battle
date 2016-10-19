@@ -25,7 +25,7 @@ class Player(object):
         self.max_health = 100
         self.attack = 100
         self.defence = 100
-        self.weapon = 0
+        self.weapon = 1
         self.life = True
     def health_check(self):
         if self.health >= self.max_health:
@@ -71,6 +71,7 @@ class Enemy(object):
         self.attack = randint(int(player.attack * 0.9), int(player.attack * 1.1))
         self.defence = randint(int(player.defence * 0.9), int(player.defence * 1.1))
         self.life = True
+        self.weapon = randint(0, 1)
 #------------------------------------------------------------------------------------------------------- Varibles
 player = Player(raw_input("Name?"), 100, 100, 0, True)
 
@@ -82,9 +83,9 @@ Still_alive = True
 
 #other varibles
 win = 300
-gold_count = 5
-enemy_count = 10
-Map_Size_X_Y = 8
+gold_count = 10
+enemy_count = 15
+Map_Size_X_Y = 16
 
 
 #bot varibles
@@ -140,6 +141,8 @@ def Object_Placement(object_count, object_to_be_placed):
                 baker()
             else:
                 object_board[x][z] = object_to_be_placed
+                if object_to_be_placed == bandit_icon:
+                    playerboard[x][z] = object_to_be_placed
                 Used_coordinates.append(str(x) + str(z))
                 spot.append(str(x) + str(z))
                            
@@ -151,10 +154,12 @@ def Object_Placement(object_count, object_to_be_placed):
     Used_coordinates.append(spot)
 Object_Placement(gold_count, health_icon)
 Object_Placement(enemy_count, bandit_icon)
+#Object_Placement(weapon_count, weapon_icon) ########## add me in!!!
+
 tick = 0
 for block in range(len(playerboard)):
     playerboard[len(playerboard)/2][tick] = wall_icon
-    tick += 1
+    tick += 1#wall placer
 #------------------------------------------------------------------------------------------------------- print board
 def print_board(board):
     for row in board:
@@ -182,38 +187,38 @@ def board_transport(move_choice, em, who):
         who[0] = 0
         who[1] = 0
 
-    if len(move_choice) == 2 and move_choice[0] in ('u', 'd', 'l', 'r') and move_choice[1] in str(range(0, len(object_board))): 
-        if move_choice[0] == "u":
-            if who[0] - int(move_choice[1]) >= 0: #UP
-                if playerboard[(who[0] - int(move_choice[1]))][who[1]] not in (wall_icon):
-                    who[0] -= int(move_choice[1]) 
+    if len(move_choice) == 1 and move_choice[0] in ('w', 'a', 's', 'd'):
+        if move_choice[0] == "w":
+            if who[0] - int(1) >= 0: #UP
+                if playerboard[(who[0] - int(1))][who[1]] not in (wall_icon):
+                    who[0] -= int(1) 
+                else:
+                    em = "You can't move there!"
+            else:
+                em = "You can't move there!"
+
+        elif move_choice[0] == "s":
+            if (who[0] + int(1)) <= (len(object_board)-1): #DOWN
+                if playerboard[(who[0] + int(1))][who[1]] not in (wall_icon):
+                    who[0] += int(1)
                 else:
                     em = "You can't move there!"
             else:
                 em = "You can't move there!"
 
         elif move_choice[0] == "d":
-            if (who[0] + int(move_choice[1])) <= (len(object_board)-1): #DOWN
-                if playerboard[(who[0] + int(move_choice[1]))][who[1]] not in (wall_icon):
-                    who[0] += int(move_choice[1])
+            if who[1] + int(1) <= (len(object_board)-1): #RIGHT
+                if playerboard[who[0]][(who[1] + int(1))] not in (wall_icon):
+                    who[1] += int(1)
                 else:
                     em = "You can't move there!"
             else:
                 em = "You can't move there!"
 
-        elif move_choice[0] == "r":
-            if who[1] + int(move_choice[1]) <= (len(object_board)-1): #RIGHT
-                if playerboard[who[0]][(who[1] + int(move_choice[1]))] not in (wall_icon):
-                    who[1] += int(move_choice[1])
-                else:
-                    em = "You can't move there!"
-            else:
-                em = "You can't move there!"
-
-        elif move_choice[0] == "l":
-            if who[1] - int(move_choice[1]) >= 0: #LEFT
-                if playerboard[who[0]][(who[1] - int(move_choice[1]))] not in (wall_icon):
-                    who[1] -= int(move_choice[1])
+        elif move_choice[0] == "a":
+            if who[1] - int(1) >= 0: #LEFT
+                if playerboard[who[0]][(who[1] - int(1))] not in (wall_icon):
+                    who[1] -= int(1)
                 else:
                     em = "You can't move there!"
             else:
@@ -221,7 +226,7 @@ def board_transport(move_choice, em, who):
         else:
             em = "What?"
     else:
-        em = "Unreadable input"
+        em = "Controls: Enter "
     error_message = em
     return who
 
@@ -232,35 +237,38 @@ def fight(enemy):
     clear()
     print "A", enemy.name ,"appears!"
     time.sleep(1)
+    weapon_check = ""
     if (enemy.health + enemy.attack + enemy.defence) > (player.health + player.attack + player.defence):
-        print "He looks Tough!"
+        if enemy.weapon > 0:
+            weapon_check = " and has a weapon"
+        print "He looks tough" + weapon_check + "!"
     else:
-        print "He looks weak"
+        print "He looks weak" + weapon_check
     time.sleep(1)
     fight_timer = True
 
     while fight_timer:
         class attack_style(object):
-            def __init__(self, ch_attack_style):
+            def __init__(self, ch_attack_style, who):
                 self.ch_attack_style = ch_attack_style
                 if self.ch_attack_style == "o":
-                    self.style = "Throws a punch!"
+                    self.style = "Attacks"
                     self.defence = 1
-                    self.attack = 1.5
+                    self.attack = 1.5 + who.weapon
                     self.speed = 1
-                elif self.ch_attack_style == "d":
+                elif self.ch_attack_style in ("d", "b"):
                     self.style = "Block!"
-                    self.defence = 3
-                    self.attack = 1
+                    self.defence = 4
+                    self.attack = 0.5 + who.weapon
                     self.speed = 0
                 elif self.ch_attack_style == "p":
-                    self.style = "Throws a power punch!"
+                    self.style = "Throws a power attack!"
                     self.defence = 0.5
-                    self.attack = 3
+                    self.attack = 3 + who.weapon
                     self.speed = 2
                 elif self.ch_attack_style == "r":
-                    self.style = "Retreats!"
-                    self.defence = 0.5
+                    self.style = "Retreat!"
+                    self.defence = 1.5
                     self.attack = 0.5
                     self.speed = 1
                 else:
@@ -287,25 +295,25 @@ def fight(enemy):
                 return damage
 
             
-            time.sleep(2)
+            time.sleep(1)
             hit = attack(fighter_stat.attack, (opponent_stat.defence))
             if hit > 0:
                 opponent.health -= hit
                 print ""
                 print fighter.name, "hit", opponent.name
-                time.sleep(2)
+                time.sleep(1)
                 print ""
                 print opponent.name, "Takes",  str(hit), "Damage!"
-                time.sleep(2)
+                time.sleep(1)
                 print ""
                 if opponent.health <= 0:
                     opponent.health = 0
                 print opponent.name, "has", str(opponent.health) + " HP Remaining"
-                time.sleep(2)
+                time.sleep(1)
             else:
                 print ""
                 print opponent.name, "Blocked", fighter.name
-                time.sleep(2)
+                time.sleep(1)
             if opponent.health <= 0:
                 opponent.health = 0
                 opponent.life = False
@@ -314,14 +322,14 @@ def fight(enemy):
                 fight_timer = False
 
 
-        player_move = attack_style(raw_input("Enter attack o/d/p/r"))
+        player_move = attack_style(raw_input("Enter attack o/d/p/r"), player)
         enemy_rand = randint(0, 2)
         if enemy_rand == 0:
-            enemy_move = attack_style("o")
+            enemy_move = attack_style("o", enemy)
         elif enemy_rand == 1:
-            enemy_move = attack_style("d")
+            enemy_move = attack_style("d", enemy)
         else:
-            enemy_move = attack_style("p")
+            enemy_move = attack_style("p", enemy)
 
         temp_player = temp_stats(player, player_move)
         temp_enemy = temp_stats(enemy, enemy_move)
@@ -343,10 +351,10 @@ def fight(enemy):
 
         clear()
         print player.name, "prepares to", player_move.style
-        time.sleep(2)
+        time.sleep(1)
         print ""
         print enemy.name, "prepares to", enemy_move.style
-        time.sleep(2)
+        time.sleep(1)
 
         Who = who(enemy_move, player_move)
         if Who == 1:
@@ -360,7 +368,10 @@ def fight(enemy):
         elif Who == "run":
             battle(enemy, player, temp_enemy, temp_player)
             fight_timer = False
-            return(0)
+            if player.life:
+                return 1
+            else:
+                return 0
 
         time.sleep(1)
 
@@ -395,13 +406,15 @@ while player.life == True:
         if object_board[oldposision[0]][oldposision[1]] == bandit_icon:
             enemy = Enemy()
             GAME = fight(enemy)
-            if player.life == True and GAME != 0:
+            if player.life == True and GAME != 0 and not enemy.life:
                 player.xp += int((enemy.attack+enemy.defence)*.2)
                 playerboard[oldposision[0]][oldposision[1]], object_board[oldposision[0]][oldposision[1]] = body_icon, body_icon
                 clear()
                 print_board(playerboard)
                 Still_alive = True
-            elif GAME == 0:
+            elif GAME == 1:
+                clear()
+                print_board(playerboard)
                 Still_alive = True
             else:
                 Still_alive = False
@@ -410,14 +423,14 @@ while player.life == True:
         if object_board[oldposision[0]][oldposision[1]] == health_icon:
             if player.health_check():
                 if memory_board[oldposision[0]][oldposision[1]] <= 3:
-                    player.health += player.level *.25
+                    player.health += player.level *25
             else:
                 memory_board[oldposision[0]][oldposision[1]] -= 1
             if memory_board[oldposision[0]][oldposision[1]] == 3:
                 playerboard[oldposision[0]][oldposision[1]], object_board[oldposision[0]][oldposision[1]] = land_icon, land_icon # Make chest_icon into bandit_icon
 
             
-
+                
 
 
         print "HP:", player.health
