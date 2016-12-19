@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 from random import randint
 from sys import platform
 
@@ -31,7 +31,7 @@ class Player(object):
         self.side = 0
         self.sideName = "Arms"
         self.life = True
-        self.gold = 65
+        self.gold = 0
     def health_check(self):
         if self.health >= self.max_health:
             self.health = self.max_health
@@ -68,9 +68,9 @@ class Player(object):
 class Enemy(object):
     def __init__(self):
         self.name = "Scary fucking monster"
-        self.health = randint(int(static_player[1] * 0.9), int(static_player[1] * 1.1))
-        self.attack = randint(int(static_player[0] * 0.9), int(static_player[0] * 1.1))
-        self.defence = randint(int(static_player[2] * 0.9), int(static_player[2] * 1.1))
+        self.health = randint(int(static_player[1] * 0.6), int(static_player[1] * 0.8))
+        self.attack = randint(int(static_player[0] * 0.6), int(static_player[0] * 0.8))
+        self.defence = randint(int(static_player[2] * 0.6), int(static_player[2] * 0.8))
         self.life = True
         self.weapon = randint(0, 1)
         self.side = randint(0, 1)
@@ -80,6 +80,22 @@ class Enemy(object):
             self.weaponName = "Fists"
         if self.side == 1:
             self.sideName = "Protective Scales"
+        else:
+            self.sideName = "Tail"
+class Enemy(object):
+    def __init__(self):
+        self.name = "Bossani!"
+        self.health = randint(int(static_player[1] * 2), int(static_player[1] * 2.2))
+        self.attack = randint(int(static_player[0] * 1.6), int(static_player[0] * 2.2))
+        self.defence = randint(int(static_player[2] * 1.6), int(static_player[2] * 2.2))
+        self.life = True
+        self.weapon = 5
+        self.side = 5
+        if self.weapon == 5:
+            self.weaponName = "Temple Bat"
+
+        if self.side == 5:
+            self.sideName = "Bossanis "
         else:
             self.sideName = "Tail"
 
@@ -96,7 +112,7 @@ def intro():
     time.sleep(2)
     print "Once all monsters are dead. step on spawn to generate new enemys!"
     time.sleep(2)
-intro()
+#intro()
 
 player = Player(raw_input("Name your character: "))
 
@@ -111,13 +127,13 @@ Still_alive = True
 win = 300
 gold_count = 2
 enemy_count = 4
-Map_Size_X_Y = 9
+Map_Size_X_Y = 10
 
 
 
 #bot varibles
 d3bug = False
-bot_speed = 0.1
+bot_speed = 0.05
 bot_memory = 2
 max_step = 2
 
@@ -130,6 +146,12 @@ wall_icon = "-"
 body_icon = "*"
 shop_icon = "$"
 spawn_icon = "~"
+boss_icon0 = "@"
+boss_icon1 = "("
+boss_icon2 = ")"
+boss_icon3 = "V"
+
+
 #------------------------------------------------------------------------------------------------------- Map gen/icon length/Object placer/player start location
 icon_length = len(player_icon)
 bandit_icon = bandit_icon*icon_length
@@ -139,6 +161,10 @@ wall_icon = wall_icon*icon_length
 body_icon = body_icon*icon_length
 shop_icon = shop_icon*icon_length
 spawn_icon = spawn_icon*icon_length
+boss_icon0 = boss_icon0*icon_length
+boss_icon1 = boss_icon1*icon_length
+boss_icon2 = boss_icon2*icon_length
+boss_icon3 = boss_icon3*icon_length
 
 
 
@@ -155,19 +181,23 @@ Used_coordinates = []# this varible prevents object placement conflict by record
 player_xy = [(len(object_board)-2), 0, 0]
 Used_coordinates.append(str(player_xy[0]) + str(player_xy[1]))
 
+
 tick = 0
 for block in range(len(playerboard)):
     playerboard[len(playerboard)/2][tick] = wall_icon
-    Used_coordinates.append(str(len(playerboard)/2) + str(tick))
+    Used_coordinates.append(str(len(playerboard)/2) + str(tick))#Wall
     playerboard[(len(object_board)-1)][(len(object_board)-1)] = spawn_icon
     object_board[(len(object_board)-1)][(len(object_board)-1)] = spawn_icon
+    Used_coordinates.append(str((len(object_board)-1)) + str(len(object_board)-1))#spawn
 
     if tick == (len(playerboard)/2):
         Used_coordinates.append(str(len(playerboard)/2) + str(tick))
-        playerboard[(len(playerboard)/2)+1][tick] = shop_icon
         shop_wall_location = str(len(playerboard)/2) + str(tick)
+        playerboard[(len(playerboard)/2)+1][tick] = shop_icon
         object_board[(len(playerboard)/2)+1][tick] = shop_icon
+        Used_coordinates.append(str((len(playerboard)/2)+1) + str(tick))
     tick += 1#wall placer
+
 
 def Object_Placement(object_count, object_to_be_placed, specific_x, specific_y):
     spot = []
@@ -224,10 +254,11 @@ def board_transport(move_choice, em, who):
 
 
     if move_choice == "d3bug":
-        player.level, player.attack, player.health = 15766, 15766, 15766
+        player.level, player.gold, player.attack, player.health = 15766, 15766, 15766, 15766
     em = move_choice
     if move_choice == "XP!":
         player.xp += 10
+        player.gold
     if move_choice == "RESET":
         who[0] = 0
         who[1] = 0
@@ -322,7 +353,7 @@ def fight(enemy):
                     self.speed = 2
                 elif self.ch_attack_style == "r":
                     self.style = "Retreat!"
-                    self.defence = 1.5 + who.side
+                    self.defence = 2 + who.side
                     self.attack = 0.5
                     self.speed = 1
                 else:
@@ -443,11 +474,126 @@ def fight(enemy):
 
         time.sleep(1)
 
+def boss_animation():
+    global playerboard
+    work_xy = [0,0]
+    tick = 0
+    trail_text = "[ "
+    boss_name = "BOSSANI WILL KILL YOU"
+    for block in range(len(playerboard)):
+        playerboard[len(playerboard)/2][tick] = wall_icon
+
+    
+    while True:
+        playerboard[work_xy[0]][work_xy[1]] = trail_text[tick%len(trail_text)-1]
+        tick += 1
+        if work_xy[1] + int(1) <= (len(object_board)-1): #Boss animation 
+            work_xy[1] += int(1)
+        else:
+            if (playerboard[work_xy[0] + 1][work_xy[1]]) not in (wall_icon):
+                work_xy[0] += int(1)
+                work_xy[1] = 0
+            else: break
+        time.sleep(bot_speed/4)
+        clear()
+        print_board(playerboard)
+    work_xy = [0,0]
+    time.sleep(bot_speed)
+    for plays in range(8):
+        tick = 0
+        while True:
+            playerboard[work_xy[0]][work_xy[1]] = boss_name[tick%len(trail_text)-1]
+            tick += 1
+            if work_xy[1] + int(1) <= (len(object_board)-1): 
+                work_xy[1] += int(1)
+            else:
+                if (playerboard[work_xy[0] + 1][work_xy[1]]) not in (wall_icon):
+                    work_xy[0] += int(1)
+                    work_xy[1] = 0
+                else: break
+        work_xy = [0,0]
+        clear()
+        print_board(playerboard)
+        time.sleep(bot_speed/4)
+
+        while True:
+            playerboard[work_xy[0]][work_xy[1]] = player_icon
+            if work_xy[1] + int(1) <= (len(object_board)-1): 
+                work_xy[1] += int(1)
+            else:
+                if (playerboard[work_xy[0] + 1][work_xy[1]]) not in (wall_icon):
+                    work_xy[0] += int(1)
+                    work_xy[1] = 0
+                else: break
+        work_xy = [0,0]
+        clear()
+        print_board(playerboard)
+        time.sleep(bot_speed)
+
+        while True:
+            playerboard[work_xy[0]][work_xy[1]] = land_icon
+            if work_xy[1] + int(1) <= (len(object_board)-1): 
+                work_xy[1] += int(1)
+            else:
+                if (playerboard[work_xy[0] + 1][work_xy[1]]) not in (wall_icon):
+                    work_xy[0] += int(1)
+                    work_xy[1] = 0
+                else: break
+        work_xy = [0,0]
+        work_xy = [0,0]
+        clear()
+        print_board(playerboard)
+        time.sleep(bot_speed)
+
+        while True:
+            playerboard[work_xy[0]][work_xy[1]] = shop_icon
+            if work_xy[1] + int(1) <= (len(object_board)-1): 
+                work_xy[1] += int(1)
+            else:
+                if (playerboard[work_xy[0] + 1][work_xy[1]]) not in (wall_icon):
+                    work_xy[0] += int(1)
+                    work_xy[1] = 0
+                else: break
+        work_xy = [0,0]
+        clear()
+        print_board(playerboard)
+        time.sleep(bot_speed)
+
+        while True:
+            playerboard[work_xy[0]][work_xy[1]] = land_icon
+            if work_xy[1] + int(1) <= (len(object_board)-1): 
+                work_xy[1] += int(1)
+            else:
+                if (playerboard[work_xy[0] + 1][work_xy[1]]) not in (wall_icon):
+                    work_xy[0] += int(1)
+                    work_xy[1] = 0
+                else: break
+        work_xy = [0,0]
+        clear()
+        print_board(playerboard)
+    #playerboard[(len(playerboard)/3)-2][(len(playerboard)/2)] = boss_icon0
+    playerboard[(len(playerboard)/3)-1][(len(playerboard)/2)-1] = boss_icon1
+    playerboard[(len(playerboard)/3)-1][(len(playerboard)/2)] = boss_icon2
+    #playerboard[(len(playerboard)/3)-1][(len(playerboard)/2)] = boss_icon3
+    print_board(playerboard)
+
+
+    
+        
+
+
+
+
+        
+
+
 class Shop(): # move me to top
     def __init__(self):
         self.items = ["Basic knife       15  Gold", "Basic shield      25  Gold", "Steel sword       40  Gold", "Steel shield      55  Gold", "Ritchie's sword   100 Gold", "Ritchie's shield  125 Gold", "Access to zone 0  50  Gold"]
     def shop(self):
         clear()
+        if playerboard[int(shop_wall_location[0])][0] != land_icon:
+            self.items[6] = "Access to zone 0  50  Gold"
         if player.gold >= 0:
             print "Welcome to Ritchie's shop!"
             print ""
@@ -515,7 +661,7 @@ class Shop(): # move me to top
                     time.sleep(1)
                     self.shop()
 
-            elif buy == "6" and self.items[6] != "ZONE 0 IS ACCESSABLE" and player.gold >= 50:
+            elif buy == "6" and player.gold >= 50 and playerboard[int(shop_wall_location[0])][0] != land_icon:
                     player.gold -= 50
                     print "You have purchased access to zone 0!"
                     playerboard[int(shop_wall_location[0])][0] = land_icon
@@ -610,26 +756,32 @@ while player.life == True:
 
         if object_board[oldposision[0]][oldposision[1]] == spawn_icon:
             ban_count = 0
+            body_count = 0
             for test in playerboard:
                 for test2 in test:
                     if test2 == bandit_icon:
                         ban_count += 1
+                    if test2 == body_icon:
+                        body_count += 1
+
+
             if ban_count < 1:
+                player.gold += 65
                 static_player = [player.attack, player.max_health, player.defence]
                 Object_Placement(enemy_count, bandit_icon, "n", ((len(playerboard)/2)-1))
+            if body_count >= 1:
+                boss_animation()
 
 
-        print "HP:", player.health
-        print "Level: ", player.level
-        print "Xp: ", player.xp
-        print "gold: ", player.gold
+        print "HP:", player.health, "  Level: ", player.level, "  Xp: ", player.xp, "  Gold: ", player.gold
 
 
 
         player.stat_check()
-        print ""
         if Still_alive == True:
             W = raw_input("w - a - s - d: ")
+            if W == "bossani":
+                boss_animation()
         else:
             Still_alive = False
             break
