@@ -82,7 +82,7 @@ class Enemy(object):
             self.sideName = "Protective Scales"
         else:
             self.sideName = "Tail"
-class Enemy(object):
+class Boss(object):
     def __init__(self):
         self.name = "Bossani!"
         self.health = randint(int(static_player[1] * 2), int(static_player[1] * 2.2))
@@ -150,6 +150,7 @@ boss_icon0 = "@"
 boss_icon1 = "("
 boss_icon2 = ")"
 boss_icon3 = "V"
+
 
 
 #------------------------------------------------------------------------------------------------------- Map gen/icon length/Object placer/player start location
@@ -574,6 +575,8 @@ def boss_animation():
     #playerboard[(len(playerboard)/3)-2][(len(playerboard)/2)] = boss_icon0
     playerboard[(len(playerboard)/3)-1][(len(playerboard)/2)-1] = boss_icon1
     playerboard[(len(playerboard)/3)-1][(len(playerboard)/2)] = boss_icon2
+    object_board[(len(playerboard)/3)-1][(len(playerboard)/2)-1] = boss_icon1
+    object_board[(len(playerboard)/3)-1][(len(playerboard)/2)] = boss_icon2
     #playerboard[(len(playerboard)/3)-1][(len(playerboard)/2)] = boss_icon3
     print_board(playerboard)
 
@@ -739,6 +742,25 @@ while player.life == True:
                 Still_alive = False
                 break
 
+
+        if playerboard[oldposision[0]][oldposision[1]] in (boss_icon0, boss_icon1, boss_icon2, boss_icon3):
+            enemy = Boss()
+            battle_timer = 0
+            GAME = fight(enemy)
+            if player.life == True and GAME != 0 and not enemy.life:
+                player.xp += int((enemy.attack+enemy.defence)*.3)
+                player.gold += int((enemy.attack+enemy.defence)*.6)/battle_timer
+                playerboard[oldposision[0]][oldposision[1]], object_board[oldposision[0]][oldposision[1]] = body_icon, body_icon
+                clear()
+                print_board(playerboard)
+                Still_alive = True
+            elif GAME == 1:
+                clear()
+                print_board(playerboard)
+                Still_alive = True
+            else:
+                Still_alive = False
+                break
         if object_board[oldposision[0]][oldposision[1]] == health_icon:
             if player.health_check():
                 if memory_board[oldposision[0]][oldposision[1]] <= 3:
@@ -765,11 +787,11 @@ while player.life == True:
                         body_count += 1
 
 
-            if ban_count < 1:
+            if ban_count == 0:
                 player.gold += 65
                 static_player = [player.attack, player.max_health, player.defence]
                 Object_Placement(enemy_count, bandit_icon, "n", ((len(playerboard)/2)-1))
-            if body_count >= 1:
+            if body_count >= 8:
                 boss_animation()
 
 
