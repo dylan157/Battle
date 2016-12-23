@@ -71,7 +71,8 @@ class Enemy(object):
         names = ["Bandit", "Random angry guy", "Scavenger", "Death dunden", "Wild Bone Biter", "Skeleton", "Kill Caller", "KILLTOLN"  ]
         weapons = ["Fists", "Stick", "Brick", "Pole", "Hammer", "knife", "Sharp knife", "Razor Teeth" "Bone Bat", "Katana", "KIll SCREAM", "ION LAZOR", "KILL BAT 2.0"]
         sides = ["Arms", "Leathers", "Arms", "Wooden board", "Thick Leathers", "Kevlar Amour", "Thick Skin", "Leather Robe", "Hard Bones", "Bone Shield", "Hard Bones", "Bone Shield", "Skin Silk Battle Robe", "Kill shield", "METAL AMOUR", "BALLISTIC AMOUR 2.0"]
-        self.level = randint(0, int(player.kills%9/2))
+        self.battle_level = screen_in_use + 2
+        self.level = randint(self.battle_level-2, self.battle_level)
         self.name = names[self.level]
         if self.level == 0:
             self.level += 1 
@@ -150,6 +151,7 @@ player_score = 0
 error_message = ""
 ran = randint 
 Still_alive = True
+screen_in_use = 0
 
 
 #other varibles
@@ -179,6 +181,7 @@ boss_icon0 = "@"
 boss_icon1 = "("
 boss_icon2 = ")"
 boss_icon3 = "V"
+door_icon = "|"
 
 
 
@@ -195,19 +198,42 @@ boss_icon0 = boss_icon0*icon_length
 boss_icon1 = boss_icon1*icon_length
 boss_icon2 = boss_icon2*icon_length
 boss_icon3 = boss_icon3*icon_length
-
+door_icon = door_icon*icon_length
 
 
 object_board = []
 memory_board = []
 playerboard = []
+static_o1 = []
+static_o2 = []
+static_o3 = []
+static_o4 = []
+static_m1 = []
+static_m2 = []
+static_m3 = []
+static_m4 = []
+static_p1 = []
+static_p2 = []
+static_p3 = []
+static_p4 = []
+staticsm = [static_m1, static_m2, static_m3, static_m4]
+staticso = [ static_o1, static_o2, static_o3, static_o4]
+staticsp = [ static_p1, static_p2, static_p3, static_p4]
 
 for click in range(Map_Size_X_Y):
     object_board.append([land_icon] * Map_Size_X_Y)
     playerboard.append([land_icon] * Map_Size_X_Y)
     memory_board.append([0] * Map_Size_X_Y)
+    for stats in staticsm:
+        stats.append([0] * Map_Size_X_Y)
+    for stats in staticso:
+        stats.append([land_icon] * Map_Size_X_Y)
+    for stats in staticsp:
+        stats.append([land_icon] * Map_Size_X_Y)
 
 Used_coordinates = []# this varible prevents object placement conflict by recording xy's already in use(e.g bandit_icon in 4,7 so a gold_icon cant also be placed there )
+Used_coordinates2 = []
+Used_coordinates3 = []
 player_xy = [(len(object_board)-2), 0, 0]
 Used_coordinates.append(str(player_xy[0]) + str(player_xy[1]))
 
@@ -216,32 +242,80 @@ tick = 0
 for block in range(len(playerboard)):
     playerboard[len(playerboard)/2][tick] = wall_icon
     Used_coordinates.append(str(len(playerboard)/2) + str(tick))#Wall
-    playerboard[(len(object_board)-1)][(len(object_board)-1)] = spawn_icon
-    object_board[(len(object_board)-1)][(len(object_board)-1)] = spawn_icon
-    Used_coordinates.append(str((len(object_board)-1)) + str(len(object_board)-1))#spawn
+    playerboard[(len(static_o2)-1)][len(playerboard)/2] = spawn_icon
+    object_board[(len(static_o2)-1)][len(playerboard)/2] = spawn_icon
+    Used_coordinates.append(str((len(object_board)-1)) + str(0))#spawn
 
     if tick == (len(playerboard)/2):
         Used_coordinates.append(str(len(playerboard)/2) + str(tick))
-        shop_wall_location = str(len(playerboard)/2) + str(tick)
+        shop_wall_location1 = str(len(playerboard)/2)
         playerboard[(len(playerboard)/2)+1][tick] = shop_icon
         object_board[(len(playerboard)/2)+1][tick] = shop_icon
         Used_coordinates.append(str((len(playerboard)/2)+1) + str(tick))
     tick += 1#wall placer
 
+tick = 0
+for block in range(len(static_p2)):
+    static_p2[len(static_p2)/2][tick] = wall_icon
+    Used_coordinates2.append(str(len(static_p2)/2) + str(tick))#Wall
+    static_p2[(len(static_o2)-1)][len(playerboard)/2] = spawn_icon
+    static_o2[(len(static_o2)-1)][len(playerboard)/2] = spawn_icon
+    Used_coordinates2.append(str((len(static_o2)-1)) + str(len(playerboard)/2))#spawn
 
-def Object_Placement(object_count, object_to_be_placed, specific_x, specific_y):
+    if tick == (len(static_p2)/2):
+        Used_coordinates2.append(str(len(static_p2)/2) + str(tick))
+        shop_wall_location2 = str(len(static_p2)/2) 
+        static_p2[(len(static_p2)/2)+1][tick] = shop_icon
+        static_o2[(len(static_p2)/2)+1][tick] = shop_icon
+        Used_coordinates2.append(str((len(static_p2)/2)+1) + str(tick))
+    if tick == (len(static_p2)-1):
+        static_p2[len(static_p2)-1][0] = door_icon
+        static_o2[len(static_p2)-1][0] = door_icon
+
+        Used_coordinates2.append(str(len(static_p2)-1) + str(int((len(playerboard)-1))))
+    tick += 1#wall placer
+
+tick = 0
+for block in range(len(static_p3)):
+    static_p3[len(static_p3)/2][tick] = wall_icon
+    Used_coordinates3.append(str(len(static_p3)/2) + str(tick))#Wall
+    static_p3[(len(static_o2)-1)][len(static_p3)/2] = spawn_icon
+    static_o3[(len(static_o2)-1)][len(static_p3)/2] = spawn_icon
+    Used_coordinates3.append(str((len(static_o3)-1)) + str(0))#spawn
+
+    if tick == (len(static_p3)/2):
+        Used_coordinates3.append(str(len(static_p3)/2) + str(tick))
+        shop_wall_location3 = str(len(static_p3)/2) 
+        static_p3[(len(static_p3)/2)+1][tick] = shop_icon
+        static_o3[(len(static_p3)/2)+1][tick] = shop_icon
+        Used_coordinates3.append(str((len(static_p3)/2)+1) + str(tick))
+    if tick == (len(static_p3)-1):
+        static_p3[len(static_p3)-1][0] = door_icon
+        static_o3[len(static_p3)-1][0] = door_icon
+        Used_coordinates3.append(str(len(static_p3)-1) + str((len(static_p3)-1)))
+    tick += 1#wall placer
+
+
+
+
+def Object_Placement(object_count, object_to_be_placed, specific_x1, specific_y1, specific_x2, specific_y2): # random input
     spot = []
-    calculated_board_x, calculated_board_y = specific_x, specific_y
-    if specific_x == "n":
+    calculated_board_x, calculated_board_y = specific_x1, specific_y1
+    calculated_board_x0, calculated_board_y0 = specific_x2, specific_y2
+    if specific_x1 == "n":
         calculated_board_x = (len(object_board)-1)
-    if specific_y == "n":
+    if specific_y1 == "n":
         calculated_board_y = (len(object_board)-1)
+    if specific_x2 == "n":
+        calculated_board_x0 = (0)
+    if specific_y2 == "n":
+        calculated_board_y0 = (0)
     for x in range(object_count): # How many random numbers?
         x, z = 0, 0        
         def baker():
             global x
             global z
-            x, z = randint(0, calculated_board_y), randint(0, calculated_board_x)            
+            x, z = randint(calculated_board_y0, calculated_board_y), randint(calculated_board_x0, calculated_board_x)            
             if (str(x) + str(z)) in Used_coordinates: # or (str(x) + str(z)) in Used_coordinates:
                 #print "XZ FOUND IN SPOT", (str(x) + str(z))
                 baker()
@@ -261,9 +335,13 @@ def Object_Placement(object_count, object_to_be_placed, specific_x, specific_y):
         print "OVERFLOW!"
     return spot
     Used_coordinates.append(spot)
-Object_Placement(gold_count, health_icon, "n", "n")
+Object_Placement(gold_count, health_icon, "n", "n", "n", "n")
 #Object_Placement(weapon_count, weapon_icon, "n", "n") ########## add me in!!!
+Object_Placement(gold_count, health_icon, "n", "n", "n", "n")
 
+static_p1 = playerboard[:]
+static_o1 = object_board[:]
+static_m1 = memory_board[:]
 
 #------------------------------------------------------------------------------------------------------- print board
 def print_board(board):
@@ -615,23 +693,15 @@ def boss_animation():
     #playerboard[(len(playerboard)/3)-1][(len(playerboard)/2)] = boss_icon3
     print_board(playerboard)
 
-
-    
-        
-
-
-
-
-        
-
-
 class Shop(): # move me to top
     def __init__(self):
-        self.items = ["Basic knife       30  Gold", "Basic shield      60  Gold", "Steel sword       100  Gold", "Steel shield      145  Gold", "Ritchie's sword   400 Gold", "Ritchie's shield  650 Gold", "Access to zone 0  50  Gold"]
+        self.items = ["Basic knife       30  Gold", "Basic shield      60  Gold", "Access to zone 0  10  Gold", "Access to level 2  100  Gold"] 
+        self.items2 = ["Steel sword       100  Gold", "Steel shield      145  Gold", "Access to zone 0  10  Gold", "Access to level 3  250  Gold"]
+        self.items3 = [ "Ritchie's sword   400 Gold", "Ritchie's shield  650 Gold", "Access to zone 0  10  Gold", "Access to level 4  400  Gold"]
     def shop(self):
         clear()
-        if playerboard[int(shop_wall_location[0])][0] != land_icon:
-            self.items[6] = "Access to zone 0  50  Gold"
+        if playerboard[int(shop_wall_location1)][0] != land_icon:
+            self.items[2] = "Access to zone 0  50  Gold"
         if player.gold >= 0:
             print "Welcome to Ritchie's shop!"
             print ""
@@ -663,50 +733,23 @@ class Shop(): # move me to top
                 time.sleep(1)
                 self.shop()
 
-            elif buy == "2" and self.items[2] != "SOLD" and player.gold >= 100:
-                player.gold -= 100
-                player.weapon = 2
-                player.weaponName = "Steel sword"
-                print "You have purchased a Steel sword!"
-                self.items[2] = "SOLD"
-                time.sleep(1)
-                self.shop()
-
-            elif buy == "3" and self.items[3] != "SOLD" and player.gold >= 145:
-                    player.gold -= 145
-                    player.side = 2
-                    player.sideName = "Steel shield"
-                    print "You have purchased a Steel shield!"
-                    self.items[3] = "SOLD"
-                    time.sleep(1)
-                    self.shop()
-
-            elif buy == "4" and self.items[4] != "SOLD" and player.gold >= 400:
-                    player.gold -= 400
-                    player.weapon = 3
-                    player.weaponName = "Ritchie's sword"
-                    print "You have purchased Ritchie's sword!"
-                    self.items[4] = "SOLD"
-                    time.sleep(1)
-                    self.shop()
-
-            elif buy == "5" and self.items[5] != "SOLD" and player.gold >= 650:
-                    player.gold -= 650
-                    player.side = 3
-                    player.sideName = "Ritchie's shield!"
-                    print "You have purchased a Ritchie's shield!"
-                    self.items[5] = "SOLD"
-                    time.sleep(1)
-                    self.shop()
-
-            elif buy == "6" and player.gold >= 10 and playerboard[int(shop_wall_location[0])][0] != land_icon:
+            elif buy == "2" and player.gold >= 10 and playerboard[int(shop_wall_location1)][0] != land_icon:
                     player.gold -= 10
                     print "You have purchased access to zone 0!"
-                    playerboard[int(shop_wall_location[0])][0] = land_icon
-                    self.items[6] = "ZONE 0 IS ACCESSABLE"
+                    playerboard[int(shop_wall_location1)][0] = land_icon
+                    self.items[2] = "ZONE 0 IS ACCESSABLE"
                     time.sleep(1)
                     self.shop()
-            elif buy == "7":
+            elif buy == "3" and self.items2[3] != "SOLD" and player.gold >= 100:
+                    player.gold -= 100
+                    print "You have purchased access to level 2!"
+                    self.items[3] = "SOLD"
+                    time.sleep(1)
+                    playerboard[len(playerboard)-1][(len(playerboard)-1)] = door_icon
+                    object_board[len(playerboard)-1][(len(playerboard)-1)] = door_icon
+                    Used_coordinates.append(str(len(playerboard)-1) + str((len(playerboard)-1)))
+                    self.shop1()
+            elif buy == "4":
                 if player.health_check():
                     player.health += player.level *25
                     player.gold -= 10
@@ -730,7 +773,187 @@ class Shop(): # move me to top
             time.sleep(1)
             print "SLAM!"
             time.sleep(1)
+
+    def shop1(self):
+        clear()
+        if playerboard[int(shop_wall_location2)][0] != land_icon:
+            self.items2[2] = "Access to zone 0  50  Gold"
+        if player.gold >= 0:
+            print "Welcome to Ritchie's shop!"
+            print ""
+            counter = 0
+            for stock in self.items2:
+                print str(counter) + ".", self.items2[counter]
+                counter += 1
+            print str(counter) + ".", "Health            10  Gold"
+            print ""
+            print "Enter 'e' to exit"
+            print "You have", player.gold, "gold"
+            print ""
+            buy = raw_input("Enter item number to buy item  -")
+            if buy == "0" and self.items2[2] != "SOLD" and player.gold >= 100:
+                player.gold -= 100
+                player.weapon = 2
+                player.weaponName = "Steel sword"
+                print "You have purchased a Steel sword!"
+                self.items2[0] = "SOLD"
+                time.sleep(1)
+                self.shop1()
+
+            elif buy == "1" and self.items2[3] != "SOLD" and player.gold >= 145:
+                    player.gold -= 145
+                    player.side = 2
+                    player.sideName = "Steel shield"
+                    print "You have purchased a Steel shield!"
+                    self.items2[1] = "SOLD"
+                    time.sleep(1)
+                    self.shop1()
+
+            elif buy == "2" and player.gold >= 10 and playerboard[int(shop_wall_location2)][0] != land_icon:
+                    player.gold -= 10
+                    print "You have purchased access to zone 0!"
+                    playerboard[int(shop_wall_location2)][0] = land_icon
+                    self.items2[2] = "ZONE 0 IS ACCESSABLE"
+                    time.sleep(1)
+                    self.shop1()
+            elif buy == "3" and self.items2[3] != "SOLD" and player.gold >= 250:
+                    player.gold -= 250
+                    print "You have purchased access to level 3!"
+                    self.items2[3] = "SOLD"
+                    time.sleep(1)
+                    playerboard[len(playerboard)-1][(len(playerboard)-1)] = door_icon
+                    object_board[len(playerboard)-1][(len(playerboard)-1)] = door_icon
+                    Used_coordinates.append(str(len(playerboard)-1) + str((len(playerboard)-1)))
+                    self.shop1()
+            elif buy == "4":
+                if player.health_check():
+                    player.health += player.level *25
+                    player.gold -= 10
+                    self.shop1()
+                else:
+                    clear()
+                    print "You already have full heath!"
+                    time.sleep(1)
+                    self.shop1()
+            elif buy == "e":
+                print "bye!"
+                time.sleep(1)
+            else:
+                clear()
+                print "You can't buy that!"
+                time.sleep(1)
+                self.shop1()
+
+        else:
+            print "sorry! Looks like you're too poor to shop here :P"
+            time.sleep(1)
+            print "SLAM!"
+            time.sleep(1)
+    
+    def shop2(self):
+        clear()
+        if playerboard[int(shop_wall_location2)][0] != land_icon:
+            self.items3[2] = "Access to zone 0  50  Gold"
+        if player.gold >= 0:
+            print "Welcome to Ritchie's shop!"
+            print ""
+            counter = 0
+            for stock in self.items3:
+                print str(counter) + ".", self.items3[counter]
+                counter += 1
+            print str(counter) + ".", "Health            10  Gold"
+            print ""
+            print "Enter 'e' to exit"
+            print "You have", player.gold, "gold"
+            print ""
+            buy = raw_input("Enter item number to buy item  -")
+            if buy == "0" and self.items3[4] != "SOLD" and player.gold >= 400:
+                    player.gold -= 400
+                    player.weapon = 3
+                    player.weaponName = "Ritchie's sword"
+                    print "You have purchased Ritchie's sword!"
+                    self.items3[0] = "SOLD"
+                    time.sleep(1)
+                    self.shop2()
+
+            elif buy == "1" and self.items3[5] != "SOLD" and player.gold >= 650:
+                    player.gold -= 650
+                    player.side = 3
+                    player.sideName = "Ritchie's shield!"
+                    print "You have purchased a Ritchie's shield!"
+                    self.items3[1] = "SOLD"
+                    time.sleep(1)
+                    self.shop2()
+
+            elif buy == "2" and player.gold >= 10 and playerboard[int(shop_wall_location2)][0] != land_icon:
+                    player.gold -= 10
+                    print "You have purchased access to zone 0!"
+                    playerboard[int(shop_wall_location2)][0] = land_icon
+                    self.items3[2] = "ZONE 0 IS ACCESSABLE"
+                    time.sleep(1)
+                    self.shop2()
+            elif buy == "3" and self.items3[3] != "SOLD" and player.gold >= 400:
+                    player.gold -= 400
+                    print "You have purchased access to level 4!"
+                    self.items3[3] = "SOLD"
+                    time.sleep(1)
+                    playerboard[len(playerboard)-1][(len(playerboard)-1)] = door_icon
+                    object_board[len(playerboard)-1][(len(playerboard)-1)] = door_icon
+                    Used_coordinates.append(str(len(playerboard)-1) + str((len(playerboard)-1)))
+                    self.shop2()
+            elif buy == "4":
+                if player.health_check():
+                    player.health += player.level *25
+                    player.gold -= 10
+                    self.shop2()
+                else:
+                    clear()
+                    print "You already have full heath!"
+                    time.sleep(1)
+                    self.shop2()
+            elif buy == "e":
+                print "bye!"
+                time.sleep(1)
+            else:
+                clear()
+                print "You can't buy that!"
+                time.sleep(1)
+                self.shop2()
+
+        else:
+            print "sorry! Looks like you're too poor to shop here :P"
+            time.sleep(1)
+            print "SLAM!"
+            time.sleep(1)
+
+
 shop_use = Shop()
+def map_changer( where_is, move):
+    global ststicp
+    global ststico
+    global ststicm
+    global playerboard
+    global object_board
+    global memory_board
+    global screen_in_use
+    
+    staticsp[screen_in_use] = playerboard
+    staticso[screen_in_use] = object_board
+    staticsm[screen_in_use] = memory_board
+
+    if move == "r":
+        screen_in_use += 1
+        where_is = [len(playerboard)-1, 0]
+    if move == "l":
+        screen_in_use -= 1
+        where_is = [len(playerboard)-1, len(playerboard)-1]
+
+    playerboard = staticsp[screen_in_use]
+    object_board = staticso[screen_in_use]
+    memory_board = staticsm[screen_in_use]
+    return where_is
+
+
 #------------------------------------------------------------------------------------------------------- game loop
 while player.life == True:
     icon_length = len(player_icon)
@@ -739,7 +962,7 @@ while player.life == True:
     #print_board(object_board)
     #time.sleep(1)
     while True:
-
+        
         clear()
         #os.system('clear') #FOR LINUX  
 
@@ -808,7 +1031,12 @@ while player.life == True:
                 playerboard[oldposision[0]][oldposision[1]], object_board[oldposision[0]][oldposision[1]] = land_icon, land_icon # Make chest_icon into bandit_icon
 
         if object_board[oldposision[0]][oldposision[1]] == shop_icon:
-            shop_use.shop()
+            if screen_in_use == 0:
+                shop_use.shop()
+            elif screen_in_use == 1:
+                shop_use.shop1()
+            elif screen_in_use == 2:
+                shop_use.shop2()
             clear()
             print_board(playerboard)
 
@@ -827,9 +1055,16 @@ while player.life == True:
             if ban_count == 0:
                 player.gold += 25
                 static_player = [player.attack, player.max_health, player.defence]
-                Object_Placement(enemy_count, bandit_icon, "n", ((len(playerboard)/2)-1))
+                Object_Placement(enemy_count, bandit_icon, "n", ((len(playerboard)/2)-1), "n", "n")
             if body_count >= 8:
                 boss_animation()
+
+        if object_board[oldposision[0]][oldposision[1]] == door_icon:
+            if (player_xy[1] > int(len(playerboard)/2)):
+                player_xy = map_changer(oldposision, "r")
+            elif (player_xy[1] < int(len(playerboard)/2)):
+                player_xy = map_changer(oldposision, "l")
+
 
 
         print "HP:", player.health, "  Level: ", player.level, "  Xp: ", player.xp, "  Gold: ", player.gold
@@ -841,6 +1076,10 @@ while player.life == True:
             W = raw_input("w - a - s - d: ")
             if W == "bossani":
                 boss_animation()
+            elif W == "glitch":
+                screen_in_use += 1
+            elif W == "unglitch":
+                screen_in_use -= 1
         else:
             Still_alive = False
             break
@@ -852,3 +1091,4 @@ while player.life == True:
 else:
     print "You have died!"
     time.sleep(22)
+    #hello
