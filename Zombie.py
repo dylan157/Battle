@@ -142,7 +142,7 @@ def intro():
     time.sleep(2)
     print "Once all monsters are dead. step on spawn to generate new enemys!"
     time.sleep(2)
-#intro()
+intro()
 
 player = Player(raw_input("Name your character: "))
 
