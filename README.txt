@@ -4,7 +4,7 @@ How to play:
 
 Choose a name,
 
-Walk to the spawn pad (~~ bottom right corner)
+Walk to the spawn pad (~~ bottom centre)
 
 To walk simply enter w, a, s, d followed by enter.
 
@@ -18,4 +18,4 @@ Find an enemy in zone 0 and kill him!
 
 After all the enemy are dead, walk to the spawn icon again. 
 
-Keep battling untill you meet BOSSANI
+Keep battling untill you can afford to purchase the next level where you will battle even tougher enemies!
