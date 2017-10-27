@@ -1048,7 +1048,7 @@ while player.life == True:
 
 
             if ban_count == 0:
-                player.gold += 25
+                player.gold += 125
                 static_player = [player.attack, player.max_health, player.defence]
                 Object_Placement(enemy_count, bandit_icon, "n", ((len(playerboard)/2)-1), "n", "n")
             if body_count >= 8:
